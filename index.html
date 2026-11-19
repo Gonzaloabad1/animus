@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANIMUS HR-8.5 // Base de Datos Genética</title>
+<style>
+    :root {
+        --bg-color: #01060c;
+        --animus-blue: #0ea5e9;
+        --animus-glow: rgba(14, 165, 233, 0.4);
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+        --panel-bg: rgba(3, 15, 30, 0.78);
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', Courier, monospace;
+        user-select: none;
+    }
+
+    body {
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        height: 100vh;
+        overflow: hidden;
+        background-image: linear-gradient(rgba(1, 6, 12, 0.75), rgba(1, 6, 12, 0.85)), url('animus.jpg');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+
+    /* Pantalla de Inicio / Carga Automática */
+    #splash-screen {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: radial-gradient(circle at 50% 50%, #03162c 0%, #01060c 90%);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 100;
+        transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .splash-particles {
+        position: absolute;
+        width: 100%; height: 100%;
+        background-image: radial-gradient(white 1px, transparent 0);
+        background-size: 50px 50px;
+        opacity: 0.15;
+        animation: pulseGlow 4s infinite alternate;
+    }
+
+    .splash-content {
+        position: relative;
+        text-align: center;
+        z-index: 2;
+        border: 1px solid rgba(14, 165, 233, 0.3);
+        padding: 40px 60px;
+        background: rgba(1, 10, 20, 0.85);
+        box-shadow: 0 0 40px rgba(14, 165, 233, 0.25);
+        backdrop-filter: blur(5px);
+        width: 520px;
+    }
+
+    .splash-logo {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+        margin-bottom: 20px;
+        filter: drop-shadow(0 0 10px var(--animus-blue));
+        animation: pulseGlow 2s infinite alternate;
+    }
+
+    .splash-title {
+        font-size: 2rem;
+        letter-spacing: 4px;
+        color: var(--animus-blue);
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        text-shadow: 0 0 15px var(--animus-glow);
+    }
+
+    .splash-subtitle {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        letter-spacing: 2px;
+        margin-bottom: 25px;
+        text-transform: uppercase;
+    }
+
+    .loading-container {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .loading-text {
+        font-size: 0.8rem;
+        color: var(--animus-blue);
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        font-weight: bold;
+    }
+
+    /* Cadena de ADN horizontal de carga */
+    .dna-loader {
+        width: 100%;
+        height: 44px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 4px 10px;
+        background: rgba(14, 165, 233, 0.05);
+        border: 1px solid rgba(14, 165, 233, 0.25);
+        border-radius: 6px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .dna-pair {
+        position: relative;
+        width: 8px;
+        height: 32px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .dna-rung {
+        position: absolute;
+        width: 2px;
+        height: 22px;
+        background: rgba(255, 255, 255, 0.12);
+        transition: all 0.2s ease;
+        animation: dnaRungSpin 1.8s ease-in-out infinite;
+    }
+
+    .dna-dot {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        transition: all 0.2s ease;
+    }
+
+    .dna-dot.top {
+        animation: dnaTop 1.8s ease-in-out infinite;
+    }
+
+    .dna-dot.bottom {
+        animation: dnaBottom 1.8s ease-in-out infinite;
+    }
+
+    /* Estado iluminado conforme avanza la sincronización */
+    .dna-pair.active .dna-rung {
+        background: rgba(14, 165, 233, 0.55);
+        box-shadow: 0 0 6px var(--animus-blue);
+    }
+
+    .dna-pair.active .dna-dot {
+        background: var(--animus-blue);
+        box-shadow: 0 0 8px var(--animus-blue), 0 0 14px rgba(14, 165, 233, 0.8);
+    }
+
+    @keyframes dnaTop {
+        0%, 100% {
+            transform: translateY(-12px) scale(1);
+            opacity: 1;
+        }
+        25% {
+            transform: translateY(0px) scale(0.65);
+            opacity: 0.45;
+        }
+        50% {
+            transform: translateY(12px) scale(1);
+            opacity: 1;
+        }
+        75% {
+            transform: translateY(0px) scale(1.2);
+            opacity: 1;
+        }
+    }
+
+    @keyframes dnaBottom {
+        0%, 100% {
+            transform: translateY(12px) scale(1);
+            opacity: 1;
+        }
+        25% {
+            transform: translateY(0px) scale(1.2);
+            opacity: 1;
+        }
+        50% {
+            transform: translateY(-12px) scale(1);
+            opacity: 1;
+        }
+        75% {
+            transform: translateY(0px) scale(0.65);
+            opacity: 0.45;
+        }
+    }
+
+    @keyframes dnaRungSpin {
+        0%, 50%, 100% {
+            transform: scaleY(1);
+            opacity: 0.85;
+        }
+        25%, 75% {
+            transform: scaleY(0.15);
+            opacity: 0.2;
+        }
+    }
+
+    /* Interfaz Principal del Animus */
+    #animus-main {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        display: none;
+        opacity: 0;
+        transition: opacity 1s ease;
+        grid-template-columns: 320px 1fr;
+        grid-template-rows: 70px 1fr 85px;
+        grid-template-areas: 
+            "header header"
+            "sidebar viewport"
+            "dock dock";
+        background-image: linear-gradient(rgba(1, 6, 12, 0.75), rgba(1, 6, 12, 0.85)), url('animus.jpg');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+
+    header {
+        grid-area: header;
+        background: rgba(2, 10, 22, 0.85);
+        border-bottom: 1px solid var(--animus-blue);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 30px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.8);
+        z-index: 10;
+        backdrop-filter: blur(4px);
+    }
+
+    .logo-area {
+        font-size: 1.2rem;
+        letter-spacing: 3px;
+        color: var(--animus-blue);
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .logo-img {
+        width: 26px;
+        height: 26px;
+        object-fit: contain;
+        vertical-align: middle;
+        filter: drop-shadow(0 0 5px var(--animus-blue));
+    }
+
+    .sync-status {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        letter-spacing: 1px;
+    }
+
+    .sync-bar {
+        width: 150px;
+        height: 6px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 3px;
+        overflow: hidden;
+        display: inline-block;
+        margin-left: 10px;
+        vertical-align: middle;
+    }
+
+    .sync-progress {
+        width: 99%;
+        height: 100%;
+        background: var(--animus-blue);
+        box-shadow: 0 0 10px var(--animus-blue);
+    }
+
+    /* Barra de navegación inferior estilo Animus (Dock Circular) */
+    .animus-dock {
+        grid-area: dock;
+        background: rgba(1, 5, 12, 0.9);
+        border-top: 1px solid rgba(14, 165, 233, 0.3);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 24px;
+        z-index: 10;
+        backdrop-filter: blur(6px);
+        box-shadow: 0 -5px 25px rgba(0,0,0,0.7);
+    }
+
+    .dock-btn {
+        background: rgba(14, 165, 233, 0.08);
+        border: 1px solid rgba(14, 165, 233, 0.3);
+        color: var(--text-muted);
+        width: 55px;
+        height: 55px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .dock-btn img {
+        width: 68%;
+        height: 68%;
+        object-fit: contain;
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .dock-btn:hover, .dock-btn.active {
+        background: rgba(14, 165, 233, 0.25);
+        border-color: var(--animus-blue);
+        color: var(--animus-blue);
+        box-shadow: 0 0 15px var(--animus-blue);
+        transform: translateY(-3px);
+    }
+
+    .dock-btn::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        top: -30px;
+        background: rgba(1, 10, 20, 0.95);
+        border: 1px solid var(--animus-blue);
+        color: var(--text-main);
+        font-size: 0.7rem;
+        padding: 3px 8px;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .dock-btn:hover::after {
+        opacity: 1;
+    }
+
+    aside {
+        grid-area: sidebar;
+        background: rgba(2, 8, 18, 0.75);
+        border-right: 1px solid rgba(14, 165, 233, 0.2);
+        padding: 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        backdrop-filter: blur(4px);
+    }
+
+    aside::-webkit-scrollbar { width: 5px; }
+    aside::-webkit-scrollbar-thumb { background: var(--animus-blue); }
+
+    .memory-item {
+        background: rgba(14, 165, 233, 0.04);
+        border: 1px solid rgba(14, 165, 233, 0.2);
+        padding: 14px 18px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        position: relative;
+    }
+
+    .memory-item::before {
+        content: '';
+        position: absolute;
+        left: 0; top: 0; width: 3px; height: 100%;
+        background: transparent;
+        transition: background 0.2s;
+    }
+
+    .memory-item:hover, .memory-item.active {
+        background: rgba(14, 165, 233, 0.25);
+        border-color: var(--animus-blue);
+        box-shadow: 0 0 15px rgba(14, 165, 233, 0.3);
+        padding-left: 22px;
+    }
+
+    .memory-item:hover::before, .memory-item.active::before {
+        background: var(--animus-blue);
+    }
+
+    .memory-title {
+        font-size: 1rem;
+        color: var(--text-main);
+        letter-spacing: 1px;
+        margin-bottom: 4px;
+    }
+
+    .memory-era {
+        font-size: 0.75rem;
+        color: var(--animus-blue);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    main {
+        grid-area: viewport;
+        padding: 24px 32px;
+        display: flex;
+        justify-content: center;
+        align-items: stretch;
+        position: relative;
+        overflow-y: auto;
+    }
+
+    /* EFECTO SCANLINE EXCLUSIVO PARA LA SECCIÓN DE BASE DE DATOS */
+    main.scanline-active::after {
+        content: " ";
+        display: block;
+        position: absolute;
+        top: 0; left: 0; bottom: 0; right: 0;
+        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+        z-index: 999;
+        background-size: 100% 3px, 3px 100%;
+        pointer-events: none;
+    }
+
+    /* Vídeo de fondo ocupando la ficha con mayor visibilidad */
+    .card-bg-video {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        opacity: 0.45;
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    .card-bg-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(1, 8, 18, 0.42) 0%, rgba(3, 18, 36, 0.28) 55%, rgba(1, 8, 18, 0.48) 100%);
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    .dossier-card {
+        background: var(--panel-bg);
+        border: 1px solid var(--animus-blue);
+        width: 100%;
+        max-width: 1200px;
+        min-height: 100%;
+        padding: 36px 44px;
+        box-shadow: 0 0 35px rgba(14, 165, 233, 0.3);
+        position: relative;
+        overflow: hidden;
+        animation: fadeIn 0.4s ease forwards;
+        backdrop-filter: blur(4px);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .dossier-card > *:not(.card-bg-video):not(.card-bg-overlay) {
+        position: relative;
+        z-index: 1;
+    }
+
+    .dossier-card::after {
+        content: "*** ANIMUS DATABASE: UA DOSSIER ***";
+        position: absolute;
+        top: 8px; right: 25px;
+        background: rgba(1, 6, 12, 0.85);
+        padding: 0 10px;
+        font-size: 0.75rem;
+        color: var(--animus-blue);
+        letter-spacing: 2px;
+        z-index: 2;
+    }
+
+    .dossier-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: 1px solid rgba(14, 165, 233, 0.3);
+        padding-bottom: 20px;
+        margin-bottom: 28px;
+        gap: 20px;
+    }
+
+    .dossier-name {
+        font-size: 2.5rem;
+        color: var(--animus-blue);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+
+    .dossier-game {
+        font-size: 0.95rem;
+        background: rgba(14, 165, 233, 0.15);
+        border: 1px solid var(--animus-blue);
+        padding: 8px 16px;
+        color: var(--text-main);
+        letter-spacing: 1px;
+        white-space: nowrap;
+    }
+
+    .dossier-body {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        gap: 32px;
+        align-items: center;
+        flex: 1;
+    }
+
+    .character-img {
+        width: 100%;
+        height: 360px;
+        object-fit: contain;
+        object-position: center;
+        border: 1px solid var(--animus-blue);
+        box-shadow: 0 0 18px rgba(14, 165, 233, 0.25);
+        background: rgba(0, 6, 14, 0.78);
+        padding: 8px;
+    }
+
+    .dossier-info {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        height: 100%;
+        justify-content: center;
+    }
+
+    .dossier-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+    }
+
+    .dossier-field {
+        background: rgba(0, 0, 0, 0.68);
+        border-left: 3px solid var(--animus-blue);
+        padding: 12px 16px;
+    }
+
+    .field-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 5px;
+    }
+
+    .field-value {
+        font-size: 1.05rem;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .subject-thumb {
+        width: 46px;
+        height: 58px;
+        object-fit: cover;
+        object-position: top center;
+        border: 1px solid rgba(14, 165, 233, 0.55);
+        background: rgba(1, 10, 20, 0.92);
+        border-radius: 4px;
+        flex-shrink: 0;
+    }
+
+    .dossier-desc {
+        font-size: 1.05rem;
+        color: var(--text-muted);
+        line-height: 1.65;
+        background: rgba(0, 0, 0, 0.62);
+        border: 1px solid rgba(14, 165, 233, 0.15);
+        padding: 20px;
+        max-height: 220px;
+        overflow-y: auto;
+    }
+
+    .dossier-desc::-webkit-scrollbar { width: 5px; }
+    .dossier-desc::-webkit-scrollbar-thumb { background: var(--animus-blue); }
+
+    /* Estilos ampliados para las tarjetas de contenido histórico (Facciones y Localizaciones) */
+    .order-card {
+        background: var(--panel-bg);
+        border: 1px solid var(--animus-blue);
+        width: 100%;
+        max-width: 1200px;
+        height: 100%;
+        padding: 36px 44px;
+        box-shadow: 0 0 35px rgba(14, 165, 233, 0.3);
+        position: relative;
+        overflow-x: hidden;
+        overflow-y: auto;
+        animation: fadeIn 0.4s ease forwards;
+        backdrop-filter: blur(4px);
+    }
+
+    .order-card > *:not(.card-bg-video):not(.card-bg-overlay) {
+        position: relative;
+        z-index: 1;
+    }
+
+    .order-card::-webkit-scrollbar { width: 6px; }
+    .order-card::-webkit-scrollbar-thumb { background: var(--animus-blue); }
+
+    .faction-tabs {
+        display: flex;
+        gap: 14px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+
+    .faction-tab-btn {
+        background: rgba(14, 165, 233, 0.08);
+        border: 1px solid rgba(14, 165, 233, 0.35);
+        color: var(--text-muted);
+        padding: 10px 20px;
+        font-size: 0.9rem;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .faction-tab-btn:hover, .faction-tab-btn.active {
+        background: rgba(14, 165, 233, 0.25);
+        border-color: var(--animus-blue);
+        color: var(--text-main);
+        box-shadow: 0 0 14px rgba(14, 165, 233, 0.35);
+    }
+
+    .order-banner-img {
+        width: 100%;
+        height: 300px;
+        object-fit: contain;
+        object-position: center;
+        border: 1px solid var(--animus-blue);
+        box-shadow: 0 0 18px rgba(14, 165, 233, 0.25);
+        background: rgba(0, 6, 14, 0.85);
+        padding: 12px;
+        margin-bottom: 24px;
+    }
+
+    .order-card h2 {
+        color: var(--animus-blue);
+        font-size: 2.3rem;
+        margin-bottom: 24px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        border-bottom: 1px solid rgba(14, 165, 233, 0.3);
+        padding-bottom: 14px;
+    }
+
+    .order-card h3 {
+        color: var(--animus-blue);
+        font-size: 1.4rem;
+        margin: 28px 0 12px 0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .order-card h4 {
+        color: var(--text-main);
+        font-size: 1.15rem;
+        margin: 18px 0 10px 0;
+    }
+
+    .order-card p {
+        color: var(--text-muted);
+        font-size: 1.05rem;
+        line-height: 1.72;
+        margin-bottom: 18px;
+    }
+
+    .order-card ul, .order-card ol {
+        margin: 15px 0 18px 28px;
+        color: var(--text-muted);
+    }
+
+    .order-card li {
+        margin-bottom: 10px;
+        font-size: 1.05rem;
+        line-height: 1.65;
+    }
+
+    /* Estilos para la sección Localizaciones */
+    .location-banner-img {
+        width: 100%;
+        height: 340px;
+        object-fit: cover;
+        object-position: center;
+        border: 1px solid var(--animus-blue);
+        box-shadow: 0 0 18px rgba(14, 165, 233, 0.25);
+        background: rgba(0, 6, 14, 0.85);
+        margin-bottom: 24px;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulseGlow {
+        0% { opacity: 0.1; }
+        100% { opacity: 0.25; }
+    }
+</style>
+</head>
+<body>
+
+    <!-- Pantalla de Inicio Automática con Cadena de ADN de Carga -->
+    <div id="splash-screen">
+        <div class="splash-particles"></div>
+        <div class="splash-content">
+            <img src="animus1.jpg" alt="Logotipo Animus" class="splash-logo">
+            <div class="splash-title">ANIMUS HR-8.5</div>
+            <div class="splash-subtitle">Sistema de Lectura de Memoria Genética</div>
+            <div class="loading-container">
+                <div class="loading-text" id="loading-text">BUSCANDO DATOS RELEVANTES DE MEMORIA... 0%</div>
+                <div class="dna-loader" id="dna-loader" aria-label="Secuenciando cadena de ADN"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interfaz Principal del Animus -->
+    <div id="animus-main">
+        <header>
+            <div class="logo-area">
+                <span><img src="animus1.jpg" alt="Logo Animus" class="logo-img"></span> ANIMUS HR-8.5
+            </div>
+            <div class="sync-status">
+                Sincronización Genética: <span style="color: var(--animus-blue); font-weight: bold;">99.1%</span>
+                <div class="sync-bar"><div class="sync-progress"></div></div>
+            </div>
+        </header>
+
+        <aside id="memory-list">
+            <!-- Se generan dinámicamente -->
+        </aside>
+
+        <main id="viewport" class="scanline-active">
+            <!-- Contenido dinámico -->
+        </main>
+
+        <!-- Barra inferior interactiva estilo menú circular del Animus -->
+        <nav class="animus-dock">
+            <button class="dock-btn active" id="btn-db" onclick="mostrarSeccion('database')" data-tooltip="Base de Datos">
+                <img src="memorias.jpg" alt="Base de Datos">
+            </button>
+            <button class="dock-btn" id="btn-factions" onclick="mostrarSeccion('factions')" data-tooltip="Facciones">
+                <img src="asesinos.jpg" alt="Facciones">
+            </button>
+            <button class="dock-btn" id="btn-locations" onclick="mostrarSeccion('locations')" data-tooltip="Localizaciones">
+                <img src="abstergo.jpg" alt="Localizaciones">
+            </button>
+        </nav>
+    </div>
+
+    <script>
+        const memorias = [
+            {
+                nombre: "Kassandra / Alexios",
+                era: "Antigua Grecia (431 – 422 a.C.)",
+                juego: "Assassin's Creed Odyssey",
+                sujeto: "Layla Hassan",
+                imagenSujeto: "layla.jpg",
+                ubicacion: "Grecia / Islas del Egeo",
+                artefacto: "Lanza de Leónidas",
+                imagen: "Alexios-Kassandra.jpg",
+                imagenLocalizacion: "grecia.jpg",
+                descripcion: "Mercenarios con sangre Isu envueltos en la Guerra del Peloponeso y la caza sistemática de los miembros del Culto de Kosmos."
+            },
+            {
+                nombre: "Bayek de Siwa & Aya",
+                era: "Antiguo Egipto (49 – 44 a.C.)",
+                juego: "Assassin's Creed Origins",
+                sujeto: "Layla Hassan",
+                imagenSujeto: "layla.jpg",
+                ubicacion: "Egipto / Alejandría",
+                artefacto: "Manzana del Edén",
+                imagen: "bayek.jpg",
+                imagenLocalizacion: "egipto.jpg",
+                descripcion: "Los últimos Medjay de Egipto. Tras una trágica pérdida personal, fundan 'Los Ocultos', la organización precursora de la Hermandad de los Asesinos."
+            },
+            {
+                nombre: "Basim Ibn Ishaq",
+                era: "Bagdad (861 d.C.)",
+                juego: "Assassin's Creed Mirage",
+                sujeto: "Archivos de Abstergo Cloud",
+                ubicacion: "Bagdad / Alamut",
+                artefacto: "Disco Isu Nexus",
+                imagen: "basim.jpg",
+                imagenLocalizacion: "alamut.jpg",
+                descripcion: "Astuto ladrón callejero que asciende en las filas de los Ocultos mientras descubre la verdad sobre su doble naturaleza como reencarnación de Loki."
+            },
+            {
+                nombre: "Eivor Varinsdottir",
+                era: "Inglaterra Vikinga (872 – 878 d.C.)",
+                juego: "Assassin's Creed Valhalla",
+                sujeto: "Layla Hassan",
+                imagenSujeto: "layla.jpg",
+                ubicacion: "Reino Unido / Escandinavia",
+                artefacto: "Sudario del Edén",
+                imagen: "eivor.jpg",
+                imagenLocalizacion: "loc-inglaterra-vikinga.jpg",
+                descripcion: "Líder del clan Cuervo que cruza los mares hacia tierras sajonas en busca de un nuevo hogar, forjando alianzas y desvelando secretos antiguos."
+            },
+            {
+                nombre: "Altaïr Ibn-La'Ahad",
+                era: "Tierra Santa (1191 d.C.)",
+                juego: "Assassin's Creed (2007)",
+                sujeto: "Desmond Miles",
+                imagenSujeto: "desmond.jpg",
+                ubicacion: "Masyaf, Jerusalén, Acre, Damasco",
+                artefacto: "Fruto del Edén",
+                imagen: "altair.jpg",
+                imagenLocalizacion: "masyaf.jpg",
+                descripcion: "Maestro Asesino durante la Tercera Cruzada encargado de restaurar el honor del Credo y proteger las reliquias de la Primera Civilización."
+            },
+            {
+                nombre: "Ezio Auditore da Firenze",
+                era: "Renacimiento (1476 – 1512 d.C.)",
+                juego: "Assassin's Creed II, Brotherhood & Revelations",
+                sujeto: "Desmond Miles",
+                imagenSujeto: "desmond.jpg",
+                ubicacion: "Florencia, Venecia, Roma, Constantinopla",
+                artefacto: "Gran Fruto del Edén",
+                imagen: "ezio.jpg",
+                imagenLocalizacion: "florencia.jpg",
+                descripcion: "Noble florentino convertido en el Mentor más legendario de la Hermandad. Su lucha contra los Borgia marcó el apogeo global del Credo."
+            },
+            {
+                nombre: "Aguilar de Nerja",
+                era: "Inquisición Española (1455 – 1526)",
+                juego: "Assassin's Creed (Animus / Película)",
+                sujeto: "Callum Lynch",
+                imagenSujeto: "Callum.jpg",
+                ubicacion: "Andalucía, Sevilla, Granada y Cádiz",
+                artefacto: "Fruto / Manzana del Edén",
+                imagen: "aguilar.jpg",
+                imagenLocalizacion: "sevilla.jpg",
+                descripcion: "Maestro Asesino y posterior Mentor de la Hermandad española, ancestro de Callum Lynch por vía materna. Iniciado en 1491 en Andalucía bajo el mentor Benedicto junto a su compañera María, se enfrentó a los planes del inquisidor general Tomás de Torquemada y a Ojeda. Tras escapar por los tejados y la catedral de Sevilla, intervenir en la caída de Granada en 1492 y perder a María frente a Ojeda —a quien derrotó con su hoja oculta—, confió la Manzana a Cristóbal Colón en Cádiz antes de morir en 1526. Destacó en combate armado y desarmado, tiro con arco, parkour, Salto de la Fe y el uso de dos cuchillas ocultas (una con gancho de agarre), cuchillos y bombas de humo."
+            },
+            {
+                nombre: "Yasuke & Naoe",
+                era: "Japón Feudal (1579 d.C.)",
+                juego: "Assassin's Creed Shadows",
+                sujeto: "Animus Cloud",
+                ubicacion: "Provincias de Japón",
+                artefacto: "Pagoda Isu",
+                imagen: "yasuke-naoe.jpg",
+                imagenLocalizacion: "loc-japon-feudal.jpg",
+                descripcion: "Una hábil shinobi experta en sigilo y un emblemático samurái de origen africano cuyas historias convergen en el Japón del período Sengoku."
+            },
+            {
+                nombre: "Edward Kenway",
+                era: "Edad de Oro Pirata (1715 – 1722 d.C.)",
+                juego: "Assassin's Creed IV: Black Flag",
+                sujeto: "Investigador de Abstergo",
+                ubicacion: "Caribe (La Habana, Nassau)",
+                artefacto: "El Observatorio",
+                imagen: "edward.jpg",
+                video: "nassau1.mp4",
+                imagenLocalizacion: "nassau.jpg",
+                descripcion: "Audaz corsario galés seducido por la riqueza y la gloria que se ve arrastrado al conflicto milenario tras apoderarse de los ropajes de un Asesino."
+            },
+            {
+                nombre: "Shay Patrick Cormac",
+                era: "Guerra de los Siete Años (1752 – 1760 d.C.)",
+                juego: "Assassin's Creed Rogue",
+                sujeto: "Analista de Abstergo",
+                ubicacion: "Atlántico Norte / Nueva York",
+                artefacto: "Templo Precursor",
+                imagen: "Shay.jpg",
+                imagenLocalizacion: "loc-atlantico-norte.jpg",
+                descripcion: "Antiguo Asesino que experimenta una profunda crisis moral y se une a la Orden Templaria para cazar a sus antiguos hermanos."
+            },
+            {
+                nombre: "Connor (Ratonhnhaké:ton)",
+                era: "Revolución Americana (1754 – 1783 d.C.)",
+                juego: "Assassin's Creed III",
+                sujeto: "Desmond Miles",
+                imagenSujeto: "desmond.jpg",
+                ubicacion: "Boston, Nueva York, Frontera",
+                artefacto: "Amuleto del Gran Templo Isu",
+                imagen: "connor.jpg",
+                imagenLocalizacion: "boston.jpg",
+                descripcion: "Guerrero de raíces mohicanas y británicas que lucha incansablemente por proteger las tierras de su pueblo durante la Revolución Americana."
+            },
+            {
+                nombre: "Arno Dorian",
+                era: "Revolución Francesa (1789 – 1794 d.C.)",
+                juego: "Assassin's Creed Unity",
+                sujeto: "Usuario de Helix",
+                ubicacion: "París, Versalles",
+                artefacto: "Espada de Edén",
+                imagen: "arno.jpg",
+                imagenLocalizacion: "paris.jpg",
+                descripcion: "Joven noble impulsado por el remordimiento que descubre los secretos de la Hermandad en París mientras vive un peligroso romance con una templaria."
+            },
+            {
+                nombre: "Jacob & Evie Frye",
+                era: "Londres Victoriano (1868 d.C.)",
+                juego: "Assassin's Creed Syndicate",
+                sujeto: "Helix Cloud",
+                ubicacion: "Londres, Inglaterra",
+                artefacto: "El Sudario del Edén",
+                imagen: "jacob-evie.jpg",
+                imagenLocalizacion: "londres.jpg",
+                video: "londres.mp4",
+                descripcion: "Hermanos gemelos que fundan una banda callejera ('Los Rooks') para arrebatar el control del submundo industrial londinense a los Templarios."
+            }
+        ];
+
+        let seccionActual = 'database';
+        let faccionActiva = 'assassins';
+        const TOTAL_PARES_ADN = 24;
+
+        function inicializarCadenaADN() {
+            const contenedor = document.getElementById('dna-loader');
+            contenedor.innerHTML = '';
+            for (let i = 0; i < TOTAL_PARES_ADN; i++) {
+                const par = document.createElement('div');
+                par.className = 'dna-pair';
+                const retraso = (-i * 0.14).toFixed(2) + 's';
+                par.innerHTML = `
+                    <span class="dna-rung" style="animation-delay: ${retraso};"></span>
+                    <span class="dna-dot top" style="animation-delay: ${retraso};"></span>
+                    <span class="dna-dot bottom" style="animation-delay: ${retraso};"></span>
+                `;
+                contenedor.appendChild(par);
+            }
+        }
+
+        function actualizarCadenaADN(progreso) {
+            const pares = document.querySelectorAll('#dna-loader .dna-pair');
+            const activos = Math.round((progreso / 100) * pares.length);
+            pares.forEach((par, idx) => {
+                if (idx < activos) {
+                    par.classList.add('active');
+                } else {
+                    par.classList.remove('active');
+                }
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            inicializarCadenaADN();
+            let progreso = 0;
+            const texto = document.getElementById('loading-text');
+            
+            const intervalo = setInterval(() => {
+                progreso += 2;
+                if (progreso <= 100) {
+                    actualizarCadenaADN(progreso);
+                    texto.innerText = `BUSCANDO DATOS RELEVANTES DE MEMORIA... ${progreso}%`;
+                } else {
+                    clearInterval(intervalo);
+                    iniciarAnimusAutomatico();
+                }
+            }, 30);
+        });
+
+        function iniciarAnimusAutomatico() {
+            const splash = document.getElementById('splash-screen');
+            splash.style.opacity = '0';
+            setTimeout(() => {
+                splash.style.display = 'none';
+                const main = document.getElementById('animus-main');
+                main.style.display = 'grid';
+                setTimeout(() => main.style.opacity = '1', 50);
+                renderizarLista();
+                cargarDossier(memorias[0]);
+            }, 800);
+        }
+
+        function mostrarSeccion(seccion) {
+            seccionActual = seccion;
+            document.getElementById('btn-db').classList.remove('active');
+            document.getElementById('btn-factions').classList.remove('active');
+            document.getElementById('btn-locations').classList.remove('active');
+            const aside = document.getElementById('memory-list');
+            const viewport = document.getElementById('viewport');
+
+            if (seccion === 'database') {
+                document.getElementById('btn-db').classList.add('active');
+                aside.style.display = 'flex';
+                viewport.classList.add('scanline-active');
+                renderizarLista();
+                cargarDossier(memorias[0]);
+            } else if (seccion === 'factions') {
+                document.getElementById('btn-factions').classList.add('active');
+                aside.style.display = 'none';
+                viewport.classList.remove('scanline-active');
+                cargarFacciones(faccionActiva);
+            } else if (seccion === 'locations') {
+                document.getElementById('btn-locations').classList.add('active');
+                aside.style.display = 'flex';
+                viewport.classList.add('scanline-active');
+                renderizarListaLocalizaciones();
+                cargarLocalizacion(memorias[0]);
+            }
+        }
+
+        function renderizarLista() {
+            const container = document.getElementById('memory-list');
+            container.innerHTML = '';
+            memorias.forEach((mem, index) => {
+                const item = document.createElement('div');
+                item.className = `memory-item ${index === 0 ? 'active' : ''}`;
+                item.innerHTML = `
+                    <div class="memory-title">${mem.nombre}</div>
+                    <div class="memory-era">${mem.era}</div>
+                `;
+                item.addEventListener('mouseenter', () => {
+                    if (seccionActual === 'database') {
+                        document.querySelectorAll('.memory-item').forEach(el => el.classList.remove('active'));
+                        item.classList.add('active');
+                        cargarDossier(mem);
+                    }
+                });
+                item.addEventListener('click', () => {
+                    if (seccionActual === 'database') {
+                        document.querySelectorAll('.memory-item').forEach(el => el.classList.remove('active'));
+                        item.classList.add('active');
+                        cargarDossier(mem);
+                    }
+                });
+                container.appendChild(item);
+            });
+        }
+
+        function renderizarListaLocalizaciones() {
+            const container = document.getElementById('memory-list');
+            container.innerHTML = '';
+            memorias.forEach((mem, index) => {
+                const item = document.createElement('div');
+                item.className = `memory-item ${index === 0 ? 'active' : ''}`;
+                item.innerHTML = `
+                    <div class="memory-title">${mem.ubicacion}</div>
+                    <div class="memory-era">${mem.era}</div>
+                `;
+                item.addEventListener('mouseenter', () => {
+                    if (seccionActual === 'locations') {
+                        document.querySelectorAll('.memory-item').forEach(el => el.classList.remove('active'));
+                        item.classList.add('active');
+                        cargarLocalizacion(mem);
+                    }
+                });
+                item.addEventListener('click', () => {
+                    if (seccionActual === 'locations') {
+                        document.querySelectorAll('.memory-item').forEach(el => el.classList.remove('active'));
+                        item.classList.add('active');
+                        cargarLocalizacion(mem);
+                    }
+                });
+                container.appendChild(item);
+            });
+        }
+
+        function renderVideoFondo(mem) {
+            if (!mem.video) return '';
+            return `
+                <video src="${mem.video}" class="card-bg-video" autoplay loop muted playsinline></video>
+                <div class="card-bg-overlay"></div>
+            `;
+        }
+
+        function cargarDossier(mem) {
+            const viewport = document.getElementById('viewport');
+            const sujetoHtml = mem.imagenSujeto
+                ? `<img src="${mem.imagenSujeto}" alt="${mem.sujeto}" class="subject-thumb"><span>${mem.sujeto}</span>`
+                : `<span>${mem.sujeto}</span>`;
+
+            viewport.innerHTML = `
+                <div class="dossier-card">
+                    ${renderVideoFondo(mem)}
+                    <div class="dossier-header">
+                        <div>
+                            <div class="field-label">Antepasado / Sujeto</div>
+                            <div class="dossier-name">${mem.nombre}</div>
+                        </div>
+                        <div class="dossier-game">${mem.juego}</div>
+                    </div>
+                    <div class="dossier-body">
+                        <img src="${mem.imagen}" alt="${mem.nombre}" class="character-img">
+                        <div class="dossier-info">
+                            <div class="dossier-grid">
+                                <div class="dossier-field">
+                                    <div class="field-label">Época Histórica</div>
+                                    <div class="field-value">${mem.era}</div>
+                                </div>
+                                <div class="dossier-field">
+                                    <div class="field-label">Ubicación</div>
+                                    <div class="field-value">${mem.ubicacion}</div>
+                                </div>
+                                <div class="dossier-field">
+                                    <div class="field-label">Operador / Sujeto</div>
+                                    <div class="field-value">${sujetoHtml}</div>
+                                </div>
+                                <div class="dossier-field">
+                                    <div class="field-label">Artefacto Isu</div>
+                                    <div class="field-value">${mem.artefacto}</div>
+                                </div>
+                            </div>
+                            <div class="dossier-desc">
+                                <div class="field-label" style="margin-bottom: 6px; color: var(--animus-blue);">Resumen de Secuencia Genética</div>
+                                ${mem.descripcion}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function cargarLocalizacion(mem) {
+            const viewport = document.getElementById('viewport');
+
+            viewport.innerHTML = `
+                <div class="order-card">
+                    ${renderVideoFondo(mem)}
+                    <img src="${mem.imagenLocalizacion}" alt="${mem.ubicacion}" class="location-banner-img">
+                    <h2>${mem.ubicacion}</h2>
+                    <div class="dossier-grid" style="margin-bottom: 24px;">
+                        <div class="dossier-field">
+                            <div class="field-label">Época Histórica</div>
+                            <div class="field-value">${mem.era}</div>
+                        </div>
+                        <div class="dossier-field">
+                            <div class="field-label">Memoria Vinculada</div>
+                            <div class="field-value">${mem.nombre}</div>
+                        </div>
+                        <div class="dossier-field">
+                            <div class="field-label">Simulación / Fuente</div>
+                            <div class="field-value">${mem.juego}</div>
+                        </div>
+                        <div class="dossier-field">
+                            <div class="field-label">Artefacto Asociado</div>
+                            <div class="field-value">${mem.artefacto}</div>
+                        </div>
+                    </div>
+                    <h3>Registro de Escenario y Contexto</h3>
+                    <p>${mem.descripcion}</p>
+                </div>
+            `;
+        }
+
+        function cargarFacciones(faccion = 'assassins') {
+            faccionActiva = faccion;
+            const viewport = document.getElementById('viewport');
+
+            const tabsHtml = `
+                <div class="faction-tabs">
+                    <button class="faction-tab-btn ${faccion === 'assassins' ? 'active' : ''}" onclick="cargarFacciones('assassins')">
+                        Hermandad de los Asesinos
+                    </button>
+                    <button class="faction-tab-btn ${faccion === 'templars' ? 'active' : ''}" onclick="cargarFacciones('templars')">
+                        Orden de los Templarios
+                    </button>
+                </div>
+            `;
+
+            if (faccion === 'assassins') {
+                viewport.innerHTML = `
+                    <div class="order-card">
+                        ${tabsHtml}
+                        <img src="asesino.jpg" alt="Hermandad de los Asesinos" class="order-banner-img">
+                        <h2>Hermandad de los Asesinos</h2>
+                        <p>La Hermandad de los Asesinos, también conocida como la Orden de los Asesinos, los Ocultos durante sus primeros años y la Hashshashin durante las Cruzadas, era una Orden organizada de asesinos y enemigos jurados de la Orden Templaria, contra la cual libraron una guerra continua y recóndita en todo el mundo, interviniendo en la totalidad de la historia humana registrada.</p>
+                        
+                        <p>Mientras que los Templarios tratan de salvar a la humanidad de sí misma mediante el control del libre albedrío, la Orden de los Asesinos lucha para garantizar la supervivencia de la libertad, ya que permite la progresión de nuevas ideas y el crecimiento de la individualidad. Los Asesinos también se han convertido recientemente en enemigos de los Instrumentos de la Primera Voluntad, un culto empeñado en restablecer el dominio absoluto de los Isu sobre la humanidad.</p>
+                        
+                        <p>Los Asesinos, si no la Orden en sí, han existido desde al menos el 456 a.e.c, a lo largo del Imperio Romano, la Edad Media, el Renacimiento, la Revolución Industrial y en la era moderna. Aunque la orden como tal solo lleva existiendo unos pocos de siglos, lo cierto es que los primeros asesinos aparecieron alrededor de hace 77.000 años. Los dos primeros protoasesinos fueron Adán y Eva, dos humanos que se rebelaron contra el control de los Isu. Otros descendientes de los Isu lucharon por el libre albedrío y la libertad, estableciéndose así como los antecesores de la Hermandad.</p>
+                        
+                        <p>El primer uso de una hoja oculta (arma emblema de los Asesinos) es atribuido a Darío, que uso la cuchilla para asesinar al Rey Jerjes I de Persia en el 465 a.C. La cuchilla se fue heredando entre los descendientes de Darío hasta que Aya la usó a mediados del siglo I a.C. para vengar la muerte de su hijo Khemu a manos de una orden prototemplaria conocida como Orden de los Antiguos. Junto a su marido Bayek de Siwa, fundaron los Ocultos, la primera encarnación de la Hermandad que ya tenía ciertos puntos en común con la Orden actual. Además, esta primera encarnación ya metió bastante mano en la política, pues fue culpable de las muertes de Julio César y Cleopatra.</p>
+
+                        <p>Con el tiempo, la Orden se fue extendiendo por el globo terráqueo. Fue en la actual Siria dónde la Hermandad levantina comenzó a llamarse a sí mismos Asesinos y establecieron su fortaleza en Masyaf. A finales del siglo XII, el entonces Mentor Al Mualim enloqueció de poder y llegó a aliarse con los Templarios para conseguir el Fruto del Edén. Altaïr Ibn-La'Ahad, Maestro de la Orden levantina, consiguió acabar con la vida de Al Mualim, ocupando el cargo de Mentor y llevando a la Hermandad a un período de grandes reformas que establecerían la filosofía actual de la Orden. En este periodo se escribiría el Códice de Altaïr Ibn-La'Ahad, el libro que marcaría a las generaciones futuras de Asesinos.</p>
+
+                        <p>La Hermandad siguió con sus acciones a lo largo de los años, frenando las invasiones por parte de los Kanes mongoles en Asia en el siglo XII, intentando erradicar a los Templarios atacando su base en Francia a principios del siglo XIV y posteriormente trabajando junto al Reino de Francia en la Guerra de los Cien Años contra Inglaterra, dominada por el Rito Templario británico.</p>
+
+                        <p>Otra etapa de esplendor de la Hermandad comenzó a finales del siglo XV, con el auge de la Hermandad italiana de Asesinos liderada por Ezio Auditore da Firenze. Bajo su mandato, la Hermandad consiguió acabar con un gran números de Templarios italianos, incluyendo al Papa Alejandro VI y su hijo César.</p>
+
+                        <p>Pero las contribuciones de Ezio no se limitaron a las fronteras italianas, sino que también ayudó a la Hermandad española a enfrentarse a la Inquisición liderada por el Templario Tomás de Torquemada, al Mentor egipcio Iskender, al levantino Mujir, a la Hermandad otomana en su lucha contra los bizantinos y entrenó a la que se convertiría en Mentora china, Shao Jun.</p>
+
+                        <p>El siglo XVIII comenzó mal para los Asesinos. A pesar de haber conseguido encontrar la localización del Observatorio y haber acabado con el Rito caribeño de los Templarios gracias a Edward Kenway, la Hermandad situada en Londres caería años después, lo que supuso que la ciudad pasó a manos Templarias durante los siguientes cien años. Además, en el Atlántico Norte, Shay Patrick Cormac traicionó a la Hermandad colonial, lo que desencadenó en el exterminio de los Asesinos en las Trece Colonias y la caída de una Caja Precursora y el Manuscrito Voynich en manos Templarias.</p>
+
+                        <p>Sin embargo, al final de siglo las tornas se invertirían. La Hermandad colonial conseguiría recuperarse a través de Connor Kenway, que contribuiría a la Independencia estadounidense de Reino Unido.</p>
+                    </div>
+                `;
+            } else {
+                viewport.innerHTML = `
+                    <div class="order-card">
+                        ${tabsHtml}
+                        <img src="templarios.jpg" alt="Orden de los Templarios" class="order-banner-img">
+                        <h2>Orden de los Templarios</h2>
+                        <p>La Orden de los Templarios, conocida también como la Orden de los Caballeros Templarios, los Pobres Compañeros-Soldados de Cristo del Templo de Salomón, la Orden del Templo de Salomón es una orden militar monástica convertida en gobierno mítico en las sombras que en los tiempos modernos fundó y controla un conglomerado corporativo multinacional llamado Industrias Abstergo. Antes de su fundación oficial como una Orden caballeresca, se los conocía bajo varios nombres, incluidos los Hijos de Caín y la Orden de los Antiguos. Los Templarios buscan crear un mundo perfecto, aunque su interpretación de los mismos contrasta directamente con los ideales de sus enemigos juramentados, la Hermandad Asesina.</p>
+                        
+                        <p>Mientras que los Asesinos afirman que la utopía puede lograrse algún día a través de un proceso gradual de aprendizaje de la tolerancia y la comprensión mutua, los Templarios clásicamente insisten en que la naturaleza humana es demasiado propensa a la corrupción para que esto sea una posibilidad. La clave de su sueño es la imposición de un Nuevo Orden Mundial, y ellos vislumbran que la verdadera paz solo puede venir cuando toda la humanidad es guiada por una sociedad iluminada de personas, a sus ojos, ellos.</p>
+
+                        <h3>Ideología y metas</h3>
+                        <h4>Sistema de creencias religiosas</h4>
+                        <p>La existencia de los Templarios se hizo conocida al público en 1129, cuando su orden militar fue respaldada por la Santa Sede como un medio para contrarrestar la creciente amenaza contra Tierra Santa por parte de los sarracenos, y para proteger la ciudad de Jerusalén. Con el tiempo, los Templarios comenzaron a creer que estaba en su poder unir al mundo en paz.</p>
+                        <p>Su sistema de creencias cambió mucho con el descubrimiento de los Fragmentos del Edén; comenzaron a especular que todas las religiones eran probablemente falsas y esto llevó a la Orden a convertirse en algo agnóstica, aunque en su mayoría deísta debido a que todavía conservaba la creencia en un Ser Supremo llamado el Padre del Entendimiento.</p>
+
+                        <h4>Metas</h4>
+                        <p>El verdadero objetivo de los Templarios es guiar e iluminar a la humanidad para transformar el mundo en una utopía progresiva autosostenida, limpiada de su naturaleza bárbara. Los Templarios ven este paso como necesario para el mundo, dado el hecho de que la humanidad fue creada para servir y ser liderada por la Primera Civilización en primer lugar.</p>
+
+                        <h4>Opiniones sobre la humanidad</h4>
+                        <p>La Doctrina Templaria estaba basada en una visión inherentemente pesimista de la humanidad. A diferencia de los Asesinos, que creían que el libre albedrío era una cualidad inherente y un derecho para toda la humanidad, los Templarios insistieron en que la "libertad" causaba caos y agitación, y en última instancia amenazaba el tejido de la civilización misma.</p>
+
+                        <h3>Organización</h3>
+                        <p>Originalmente, el título de Gran Maestro oficialmente denotaba al jefe de la Orden Templaria. Debajo del Gran Maestro de cada Rito hay nueve rangos, como subordinados inmediatos los Maestros Templarios de alto rango, Senescales, Consejeros, Comandantes, Preceptores, Caballeros, Guerreros, Clérigos y Discípulos.</p>
+                        <p>En los tiempos modernos, desde la fundación de Industrias Abstergo como un frente público para la Orden, el Círculo interno simultáneamente sirve como la Junta de Directores de Abstergo.</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
