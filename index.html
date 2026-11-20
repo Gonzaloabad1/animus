@@ -1069,8 +1069,8 @@
                 <button class="hud-pill-btn" id="btn-sfx" onclick="alternarAudio()">
                     SFX: ON
                 </button>
-                <div class="sync-status" title="Progreso guardado automáticamente">
-                    SYNC: <span id="sync-percent" style="color: var(--animus-blue); font-weight: bold;">0.0%</span>
+                <div class="sync-status" title="Progreso de fichas abiertas">
+                    SYNC: <span id="sync-percent" style="color: var(--animus-blue); font-weight: bold;">0%</span>
                     <div class="sync-bar"><div class="sync-progress" id="sync-bar-fill"></div></div>
                 </div>
             </div>
@@ -1858,7 +1858,7 @@
         /* ============================================================
            ESTADO GLOBAL Y PROGRESO PERSISTENTE (localStorage)
            ============================================================ */
-        const STORAGE_KEY = 'animus_hr85_codex_state_v1';
+        const STORAGE_KEY = 'animus_hr85_codex_state_v3';
         let estado = {
             leidos: [],
             anomaliaResuelta: false,
@@ -1871,6 +1871,15 @@
                 estado = { ...estado, ...guardado };
             }
         } catch (e) {}
+
+        function obtenerIdsValidos() {
+            const ids = new Set();
+            personas.forEach(p => ids.add(p.id));
+            localizaciones.forEach(l => ids.add(l.id));
+            Object.keys(faccionesData).forEach(k => ids.add(`fac-${k}`));
+            articulosTecnicos.forEach(t => ids.add(t.id));
+            return ids;
+        }
 
         function guardarEstado() {
             try {
@@ -1887,15 +1896,18 @@
         }
 
         function actualizarBarraSincronizacion() {
-            const totalItems = personas.length + localizaciones.length + Object.keys(faccionesData).length + articulosTecnicos.length;
-            const bonusAnomalia = estado.anomaliaResuelta ? 15 : 0;
-            const ratioLeidos = Math.min(1, estado.leidos.length / totalItems);
-            const porcentaje = Math.min(100, +(ratioLeidos * (100 - 15) + bonusAnomalia).toFixed(1));
+            const idsValidos = obtenerIdsValidos();
+            const totalFichas = idsValidos.size;
+            const leidosUnicos = estado.leidos.filter(id => idsValidos.has(id));
+            const rawPct = totalFichas > 0
+                ? Math.min(100, +((leidosUnicos.length / totalFichas) * 100).toFixed(1))
+                : 0;
+            const porcentajeTexto = rawPct === 0 ? '0%' : `${rawPct}%`;
 
             const span = document.getElementById('sync-percent');
             const fill = document.getElementById('sync-bar-fill');
-            if (span) span.innerText = `${porcentaje}%`;
-            if (fill) fill.style.width = `${porcentaje}%`;
+            if (span) span.innerText = porcentajeTexto;
+            if (fill) fill.style.width = `${rawPct}%`;
 
             const btnAnom = document.getElementById('btn-anomaly');
             if (btnAnom && estado.anomaliaResuelta) {
@@ -2041,7 +2053,7 @@
         let seccionActual = 'database';
         let subfiltroActual = 'todos';
         let faccionActiva = 'assassins';
-        let itemSeleccionado = personas[0];
+        let itemSeleccionado = null;
         let textoBusqueda = '';
 
         const searchInput = document.getElementById('global-search');
@@ -2053,7 +2065,6 @@
             AnimusAudio.playClick(1050, 0.03);
 
             if (seccionActual === 'factions') {
-                // Si busca desde facciones, cambia a Personas si hay coincidencias o filtra facciones
                 const matchFac = Object.entries(faccionesData).find(([, f]) =>
                     (f.titulo + ' ' + f.html).toLowerCase().includes(textoBusqueda)
                 );
@@ -2186,28 +2197,32 @@
                     <div class="memory-era">${sub}</div>
                 `;
 
-                const seleccionar = () => {
+                const mostrarVistaPrevia = () => {
                     document.querySelectorAll('#memory-items-scroll .memory-item').forEach(el => el.classList.remove('active'));
                     div.classList.add('active');
                     itemSeleccionado = item;
-                    marcarComoLeido(item.id);
-                    if (!yaLeido) {
-                        div.querySelector('.memory-item-top').insertAdjacentHTML('beforeend', '<span class="read-dot"></span>');
-                    }
                     if (seccionActual === 'database') cargarDossier(item);
                     else if (seccionActual === 'locations') cargarLocalizacion(item);
                     else cargarArticuloTecnico(item);
                 };
 
+                const pulsarFicha = () => {
+                    mostrarVistaPrevia();
+                    marcarComoLeido(item.id);
+                    if (!div.querySelector('.read-dot')) {
+                        div.querySelector('.memory-item-top').insertAdjacentHTML('beforeend', '<span class="read-dot"></span>');
+                    }
+                };
+
                 div.addEventListener('click', () => {
                     AnimusAudio.playClick(860, 0.05);
-                    seleccionar();
+                    pulsarFicha();
                 });
 
                 container.appendChild(div);
                 if (activo) {
                     itemSeleccionado = item;
-                    if (cargarPrimero) seleccionar();
+                    if (cargarPrimero) mostrarVistaPrevia();
                 }
             });
         }
@@ -2235,6 +2250,7 @@
         }
 
         function cargarDossier(mem) {
+            marcarComoLeido(mem.id);
             const viewport = document.getElementById('viewport');
             const esFlujoIsu = estado.flujoADN === 'isu';
             const nombreMostrado = (esFlujoIsu && mem.nombreAlt) ? mem.nombreAlt : mem.nombre;
@@ -2290,6 +2306,7 @@
         }
 
         function cargarLocalizacion(loc) {
+            marcarComoLeido(loc.id);
             const viewport = document.getElementById('viewport');
             viewport.innerHTML = `
                 <div class="order-card">
@@ -2322,24 +2339,29 @@
             `;
         }
 
+        function seleccionarFaccion(faccion) {
+            AnimusAudio.playClick();
+            marcarComoLeido(`fac-${faccion}`);
+            cargarFacciones(faccion);
+        }
+
         function cargarFacciones(faccion = 'assassins') {
             faccionActiva = faccion;
-            marcarComoLeido(`fac-${faccion}`);
             const data = faccionesData[faccion];
             const viewport = document.getElementById('viewport');
 
             const tabsHtml = `
                 <div class="faction-tabs">
-                    <button class="faction-tab-btn ${faccion === 'assassins' ? 'active' : ''}" onclick="AnimusAudio.playClick(); cargarFacciones('assassins')">
+                    <button class="faction-tab-btn ${faccion === 'assassins' ? 'active' : ''}" onclick="seleccionarFaccion('assassins')">
                         Hermandad de los Asesinos
                     </button>
-                    <button class="faction-tab-btn ${faccion === 'templars' ? 'active' : ''}" onclick="AnimusAudio.playClick(); cargarFacciones('templars')">
+                    <button class="faction-tab-btn ${faccion === 'templars' ? 'active' : ''}" onclick="seleccionarFaccion('templars')">
                         Orden de los Templarios
                     </button>
-                    <button class="faction-tab-btn ${faccion === 'ancients' ? 'active' : ''}" onclick="AnimusAudio.playClick(); cargarFacciones('ancients')">
+                    <button class="faction-tab-btn ${faccion === 'ancients' ? 'active' : ''}" onclick="seleccionarFaccion('ancients')">
                         Orden de los Antiguos / Kosmos
                     </button>
-                    <button class="faction-tab-btn ${faccion === 'isu' ? 'active' : ''}" onclick="AnimusAudio.playClick(); cargarFacciones('isu')">
+                    <button class="faction-tab-btn ${faccion === 'isu' ? 'active' : ''}" onclick="seleccionarFaccion('isu')">
                         Los Isu (Primera Civilización)
                     </button>
                 </div>
@@ -2357,6 +2379,7 @@
         }
 
         function cargarArticuloTecnico(art) {
+            marcarComoLeido(art.id);
             const viewport = document.getElementById('viewport');
             viewport.innerHTML = `
                 <div class="order-card">
@@ -2439,7 +2462,7 @@
                         <em>"Lo que llamáis milagros eran simples ecuaciones de control neuronal. La Manzana no crea ilusiones en el aire: proyecta impulsos directamente sobre los neurotransmisores que implantamos en vuestro diseño original."</em>
                     </p>
                     <p style="margin-bottom:0; color:#94a3b8; font-size:0.86rem;">
-                        — Registro recuperado por Clay Kaczmarek (Sujeto 16) y reensamblado en la matriz del HR-8.5. (+15% Sincronización Genética añadida).
+                        — Registro recuperado por Clay Kaczmarek (Sujeto 16) y reensamblado en la matriz del HR-8.5.
                     </p>
                 </div>
             `;
