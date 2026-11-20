@@ -357,7 +357,7 @@
     }
 
     .sync-progress {
-        width: 15%;
+        width: 0%;
         height: 100%;
         background: var(--animus-blue);
         box-shadow: 0 0 10px var(--animus-blue);
@@ -1036,6 +1036,7 @@
         <div class="splash-content">
             <img src="animus1.jpg" alt="Logotipo Animus" class="splash-logo">
             <div class="splash-title">ANIMUS HR-8.5</div>
+            <div class="splash-subtitle">Arquitectura Unificada // 1.28 · 2.0 · HELIX · HR-8.5</div>
             <div class="loading-container">
                 <div class="loading-text" id="loading-text">BUSCANDO DATOS RELEVANTES DE MEMORIA... 0%</div>
                 <div class="dna-loader" id="dna-loader" aria-label="Secuenciando cadena de ADN"></div>
@@ -1069,7 +1070,7 @@
                     SFX: ON
                 </button>
                 <div class="sync-status" title="Progreso guardado automáticamente">
-                    SYNC: <span id="sync-percent" style="color: var(--animus-blue); font-weight: bold;">15.0%</span>
+                    SYNC: <span id="sync-percent" style="color: var(--animus-blue); font-weight: bold;">0.0%</span>
                     <div class="sync-bar"><div class="sync-progress" id="sync-bar-fill"></div></div>
                 </div>
             </div>
@@ -1859,7 +1860,7 @@
            ============================================================ */
         const STORAGE_KEY = 'animus_hr85_codex_state_v1';
         let estado = {
-            leidos: ['kassandra'],
+            leidos: [],
             anomaliaResuelta: false,
             flujoADN: 'auto' // 'auto' | 'active' | 'isu'
         };
@@ -1887,10 +1888,9 @@
 
         function actualizarBarraSincronizacion() {
             const totalItems = personas.length + localizaciones.length + Object.keys(faccionesData).length + articulosTecnicos.length;
-            const base = 15;
             const bonusAnomalia = estado.anomaliaResuelta ? 15 : 0;
             const ratioLeidos = Math.min(1, estado.leidos.length / totalItems);
-            const porcentaje = Math.min(100, +(base + bonusAnomalia + ratioLeidos * (100 - base - 15)).toFixed(1));
+            const porcentaje = Math.min(100, +(ratioLeidos * (100 - 15) + bonusAnomalia).toFixed(1));
 
             const span = document.getElementById('sync-percent');
             const fill = document.getElementById('sync-bar-fill');
