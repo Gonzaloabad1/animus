@@ -43,20 +43,18 @@
     body {
         background-color: var(--bg-color);
         color: var(--text-main);
-        min-height: 100dvh;
-        overflow-x: hidden;
-        overflow-y: hidden;
+        height: 100vh;
+        overflow: hidden;
         background-image: linear-gradient(rgba(1, 6, 12, 0.75), rgba(1, 6, 12, 0.85)), url('animus.jpg');
         background-size: cover;
         background-position: center;
-        background-attachment: fixed;
         background-repeat: no-repeat;
         transition: all 0.4s ease;
     }
 
     /* Pantalla de Inicio / Carga Automática */
     #splash-screen {
-        position: fixed;
+        position: absolute;
         top: 0; left: 0; width: 100%; height: 100%;
         background: radial-gradient(circle at 50% 50%, #03162c 0%, #01060c 90%);
         display: flex;
@@ -64,7 +62,6 @@
         justify-content: center;
         align-items: center;
         z-index: 100;
-        padding: 16px;
         transition: opacity 0.9s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
@@ -82,12 +79,12 @@
         text-align: center;
         z-index: 2;
         border: 1px solid rgba(14, 165, 233, 0.35);
-        padding: 36px 42px;
+        padding: 40px 50px;
         background: rgba(1, 10, 20, 0.88);
         box-shadow: 0 0 40px rgba(14, 165, 233, 0.25);
         backdrop-filter: blur(6px);
         width: 540px;
-        max-width: 94vw;
+        max-width: 92vw;
     }
 
     .splash-logo {
@@ -100,8 +97,8 @@
     }
 
     .splash-title {
-        font-size: clamp(1.45rem, 4vw, 1.9rem);
-        letter-spacing: 3px;
+        font-size: 1.9rem;
+        letter-spacing: 4px;
         color: var(--animus-blue);
         margin-bottom: 8px;
         text-transform: uppercase;
@@ -109,9 +106,9 @@
     }
 
     .splash-subtitle {
-        font-size: clamp(0.75rem, 2.2vw, 0.9rem);
+        font-size: 0.9rem;
         color: var(--text-muted);
-        letter-spacing: 1.5px;
+        letter-spacing: 2px;
         margin-bottom: 24px;
         text-transform: uppercase;
     }
@@ -125,9 +122,9 @@
     }
 
     .loading-text {
-        font-size: clamp(0.68rem, 2vw, 0.78rem);
+        font-size: 0.78rem;
         color: var(--animus-blue);
-        letter-spacing: 1.2px;
+        letter-spacing: 1.5px;
         text-transform: uppercase;
         font-weight: bold;
     }
@@ -206,12 +203,10 @@
         25%, 75% { transform: scaleY(0.15); opacity: 0.2; }
     }
 
-    /* Interfaz Principal del Animus (Escritorio) */
+    /* Interfaz Principal del Animus */
     #animus-main {
-        position: relative;
-        width: 100%;
-        height: 100dvh;
-        min-height: 100dvh;
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
         display: none;
         opacity: 0;
         transition: opacity 0.8s ease;
@@ -229,22 +224,21 @@
 
     header {
         grid-area: header;
-        background: rgba(2, 10, 22, 0.92);
+        background: rgba(2, 10, 22, 0.9);
         border-bottom: 1px solid var(--animus-blue);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 10px 20px;
+        padding: 0 24px;
         box-shadow: 0 5px 20px rgba(0,0,0,0.8);
         z-index: 20;
         backdrop-filter: blur(6px);
-        gap: 12px;
-        flex-wrap: wrap;
+        gap: 14px;
     }
 
     .logo-area {
-        font-size: 1.02rem;
-        letter-spacing: 2px;
+        font-size: 1.05rem;
+        letter-spacing: 2.5px;
         color: var(--animus-blue);
         font-weight: bold;
         display: flex;
@@ -262,9 +256,8 @@
 
     /* Buscador Global en Header */
     .search-box-wrapper {
-        flex: 1 1 220px;
-        max-width: 400px;
-        min-width: 180px;
+        flex: 1;
+        max-width: 420px;
         position: relative;
         display: flex;
         align-items: center;
@@ -273,11 +266,12 @@
     .animus-search {
         width: 100%;
         background: rgba(1, 8, 18, 0.9);
-        border: 1px solid var(--animus-blue);
+        border: 1px solid rgba(14, 165, 233, 0.45);
+        border-color: var(--animus-blue);
         color: var(--text-main);
         padding: 8px 34px 8px 12px;
-        font-size: 0.76rem;
-        letter-spacing: 0.8px;
+        font-size: 0.78rem;
+        letter-spacing: 1px;
         outline: none;
         transition: all 0.25s ease;
     }
@@ -304,17 +298,16 @@
     .header-controls {
         display: flex;
         align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
+        gap: 12px;
     }
 
     .hud-pill-btn {
         background: rgba(14, 165, 233, 0.1);
         border: 1px solid var(--animus-blue);
         color: var(--text-main);
-        padding: 6px 10px;
-        font-size: 0.7rem;
-        letter-spacing: 0.8px;
+        padding: 6px 12px;
+        font-size: 0.74rem;
+        letter-spacing: 1px;
         text-transform: uppercase;
         cursor: pointer;
         transition: all 0.25s ease;
@@ -345,17 +338,17 @@
     }
 
     .sync-status {
-        font-size: 0.76rem;
+        font-size: 0.8rem;
         color: var(--text-muted);
-        letter-spacing: 0.8px;
+        letter-spacing: 1px;
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
         white-space: nowrap;
     }
 
     .sync-bar {
-        width: 90px;
+        width: 110px;
         height: 6px;
         background: rgba(255,255,255,0.1);
         border-radius: 3px;
@@ -371,16 +364,16 @@
         transition: width 0.5s ease;
     }
 
-    /* Barra de navegación inferior estilo Animus */
+    /* Barra de navegación inferior estilo Animus (Dock Circular + Etiquetas) */
     .animus-dock {
         grid-area: dock;
-        background: rgba(1, 5, 12, 0.94);
-        border-top: 1px solid var(--animus-blue);
+        background: rgba(1, 5, 12, 0.92);
+        border-top: 1px solid rgba(14, 165, 233, 0.35);
+        border-top-color: var(--animus-blue);
         display: flex;
         justify-content: center;
         align-items: center;
         gap: 28px;
-        padding: 6px 12px;
         z-index: 20;
         backdrop-filter: blur(6px);
         box-shadow: 0 -5px 25px rgba(0,0,0,0.7);
@@ -398,8 +391,8 @@
         background: rgba(14, 165, 233, 0.08);
         border: 1px solid rgba(14, 165, 233, 0.35);
         color: var(--text-muted);
-        width: 46px;
-        height: 46px;
+        width: 48px;
+        height: 48px;
         border-radius: 50%;
         display: flex;
         justify-content: center;
@@ -436,10 +429,9 @@
 
     .dock-label {
         font-size: 0.65rem;
-        letter-spacing: 0.8px;
+        letter-spacing: 1px;
         text-transform: uppercase;
         color: var(--text-muted);
-        white-space: nowrap;
     }
 
     .dock-item-wrap.active .dock-label, .dock-item-wrap:hover .dock-label {
@@ -450,12 +442,12 @@
     /* Sidebar + Monitor Biométrico HR-8.5 */
     aside {
         grid-area: sidebar;
-        background: rgba(2, 8, 18, 0.84);
+        background: rgba(2, 8, 18, 0.82);
         border-right: 1px solid rgba(14, 165, 233, 0.25);
-        padding: 14px;
+        padding: 16px;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 12px;
         backdrop-filter: blur(5px);
         overflow: hidden;
     }
@@ -472,9 +464,9 @@
         background: rgba(14, 165, 233, 0.06);
         border: 1px solid rgba(14, 165, 233, 0.28);
         color: var(--text-muted);
-        padding: 4px 8px;
-        font-size: 0.66rem;
-        letter-spacing: 0.7px;
+        padding: 4px 9px;
+        font-size: 0.68rem;
+        letter-spacing: 0.8px;
         text-transform: uppercase;
         cursor: pointer;
         transition: all 0.2s;
@@ -501,11 +493,10 @@
     .memory-item {
         background: rgba(14, 165, 233, 0.04);
         border: 1px solid rgba(14, 165, 233, 0.2);
-        padding: 10px 13px;
+        padding: 11px 14px;
         cursor: pointer;
         transition: all 0.22s ease;
         position: relative;
-        flex-shrink: 0;
     }
 
     .memory-item::before {
@@ -520,7 +511,7 @@
         background: rgba(14, 165, 233, 0.22);
         border-color: var(--animus-blue);
         box-shadow: 0 0 12px var(--animus-glow);
-        padding-left: 16px;
+        padding-left: 18px;
     }
 
     .memory-item:hover::before, .memory-item.active::before {
@@ -536,9 +527,9 @@
     }
 
     .memory-title {
-        font-size: 0.9rem;
+        font-size: 0.92rem;
         color: var(--text-main);
-        letter-spacing: 0.5px;
+        letter-spacing: 0.6px;
     }
 
     .read-dot {
@@ -551,27 +542,27 @@
     }
 
     .memory-era {
-        font-size: 0.68rem;
+        font-size: 0.7rem;
         color: var(--animus-blue);
         text-transform: uppercase;
-        letter-spacing: 0.7px;
+        letter-spacing: 0.8px;
     }
 
     /* Monitor Biométrico Portátil HR-8.5 */
     .biometric-panel {
-        background: rgba(1, 6, 14, 0.92);
-        border: 1px solid var(--animus-blue);
-        padding: 9px 11px;
+        background: rgba(1, 6, 14, 0.9);
+        border: 1px solid rgba(14, 165, 233, 0.35);
+        border-color: var(--animus-blue);
+        padding: 10px 12px;
         display: flex;
         flex-direction: column;
-        gap: 6px;
-        flex-shrink: 0;
+        gap: 7px;
     }
 
     .bio-header {
         display: flex;
         justify-content: space-between;
-        font-size: 0.66rem;
+        font-size: 0.68rem;
         color: var(--animus-blue);
         letter-spacing: 1px;
         text-transform: uppercase;
@@ -593,20 +584,20 @@
     }
 
     .bio-val {
-        font-size: 0.84rem;
+        font-size: 0.88rem;
         font-weight: bold;
         color: var(--text-main);
     }
 
     .bio-lbl {
-        font-size: 0.58rem;
+        font-size: 0.6rem;
         color: var(--text-muted);
         text-transform: uppercase;
     }
 
     main {
         grid-area: viewport;
-        padding: 18px 24px;
+        padding: 20px 28px;
         display: flex;
         justify-content: center;
         align-items: stretch;
@@ -618,7 +609,7 @@
     main.scanline-active::after {
         content: " ";
         display: block;
-        position: fixed;
+        position: absolute;
         top: 0; left: 0; bottom: 0; right: 0;
         background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
         z-index: 999;
@@ -653,7 +644,7 @@
         width: 100%;
         max-width: 1220px;
         min-height: 100%;
-        padding: 28px 34px;
+        padding: 30px 38px;
         box-shadow: 0 0 35px var(--animus-glow);
         position: relative;
         overflow-y: auto;
@@ -663,7 +654,7 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        gap: 16px;
+        gap: 18px;
     }
 
     .dossier-card::-webkit-scrollbar { width: 5px; }
@@ -677,12 +668,12 @@
     .dossier-card::after {
         content: "*** ANIMUS HR-8.5 // CÓDICE GENÉTICO UNIFICADO ***";
         position: absolute;
-        top: 8px; right: 20px;
+        top: 8px; right: 24px;
         background: rgba(1, 6, 12, 0.88);
         padding: 0 10px;
-        font-size: 0.68rem;
+        font-size: 0.72rem;
         color: var(--animus-blue);
-        letter-spacing: 1.5px;
+        letter-spacing: 2px;
         z-index: 2;
     }
 
@@ -691,18 +682,15 @@
         justify-content: space-between;
         align-items: flex-start;
         border-bottom: 1px solid rgba(14, 165, 233, 0.3);
-        padding-bottom: 14px;
-        gap: 14px;
-        flex-wrap: wrap;
-        margin-top: 8px;
+        padding-bottom: 16px;
+        gap: 20px;
     }
 
     .dossier-name {
-        font-size: clamp(1.35rem, 3vw, 2.15rem);
+        font-size: 2.2rem;
         color: var(--animus-blue);
-        letter-spacing: 1.5px;
+        letter-spacing: 2px;
         text-transform: uppercase;
-        word-break: break-word;
     }
 
     .dossier-badges {
@@ -713,25 +701,26 @@
     }
 
     .dossier-game {
-        font-size: 0.84rem;
+        font-size: 0.88rem;
         background: rgba(14, 165, 233, 0.15);
         border: 1px solid var(--animus-blue);
-        padding: 6px 12px;
+        padding: 6px 14px;
         color: var(--text-main);
-        letter-spacing: 0.8px;
+        letter-spacing: 1px;
+        white-space: nowrap;
     }
 
     .dossier-cat-tag {
-        font-size: 0.7rem;
+        font-size: 0.72rem;
         color: var(--animus-secondary);
-        letter-spacing: 1.2px;
+        letter-spacing: 1.5px;
         text-transform: uppercase;
     }
 
     .dossier-body {
         display: grid;
-        grid-template-columns: 320px 1fr;
-        gap: 24px;
+        grid-template-columns: 340px 1fr;
+        gap: 28px;
         align-items: stretch;
         flex: 1;
     }
@@ -739,8 +728,8 @@
     .character-img {
         width: 100%;
         height: 100%;
-        min-height: 280px;
-        max-height: 370px;
+        min-height: 320px;
+        max-height: 380px;
         object-fit: contain;
         object-position: center;
         border: 1px solid var(--animus-blue);
@@ -759,7 +748,7 @@
     .dossier-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 12px;
+        gap: 14px;
     }
 
     .dossier-field {
@@ -769,7 +758,7 @@
     }
 
     .field-label {
-        font-size: 0.7rem;
+        font-size: 0.72rem;
         color: var(--text-muted);
         text-transform: uppercase;
         letter-spacing: 1px;
@@ -777,17 +766,16 @@
     }
 
     .field-value {
-        font-size: 0.95rem;
+        font-size: 0.98rem;
         color: var(--text-main);
         display: flex;
         align-items: center;
         gap: 10px;
-        word-break: break-word;
     }
 
     .subject-thumb {
-        width: 40px;
-        height: 50px;
+        width: 42px;
+        height: 52px;
         object-fit: cover;
         object-position: top center;
         border: 1px solid var(--animus-blue);
@@ -797,12 +785,12 @@
     }
 
     .dossier-desc {
-        font-size: 0.96rem;
+        font-size: 0.98rem;
         color: var(--text-muted);
         line-height: 1.6;
         background: rgba(0, 0, 0, 0.62);
         border: 1px solid rgba(14, 165, 233, 0.18);
-        padding: 15px;
+        padding: 16px;
         max-height: 185px;
         overflow-y: auto;
     }
@@ -814,17 +802,17 @@
     .researcher-note {
         background: rgba(2, 12, 24, 0.85);
         border: 1px dashed var(--animus-blue);
-        padding: 12px 15px;
-        font-size: 0.88rem;
+        padding: 12px 16px;
+        font-size: 0.9rem;
         color: #e2e8f0;
         line-height: 1.5;
     }
 
     .researcher-note-header {
-        font-size: 0.7rem;
+        font-size: 0.72rem;
         color: var(--animus-blue);
         text-transform: uppercase;
-        letter-spacing: 1.3px;
+        letter-spacing: 1.5px;
         margin-bottom: 4px;
         font-weight: bold;
     }
@@ -835,7 +823,7 @@
         text-align: right;
         color: var(--animus-secondary);
         font-weight: bold;
-        font-size: 0.8rem;
+        font-size: 0.82rem;
         letter-spacing: 1px;
     }
 
@@ -846,7 +834,7 @@
         width: 100%;
         max-width: 1220px;
         height: 100%;
-        padding: 28px 34px;
+        padding: 32px 40px;
         box-shadow: 0 0 35px var(--animus-glow);
         position: relative;
         overflow-x: hidden;
@@ -865,8 +853,8 @@
 
     .faction-tabs {
         display: flex;
-        gap: 10px;
-        margin-bottom: 20px;
+        gap: 12px;
+        margin-bottom: 22px;
         flex-wrap: wrap;
     }
 
@@ -874,9 +862,9 @@
         background: rgba(14, 165, 233, 0.08);
         border: 1px solid rgba(14, 165, 233, 0.35);
         color: var(--text-muted);
-        padding: 8px 14px;
-        font-size: 0.78rem;
-        letter-spacing: 1px;
+        padding: 9px 18px;
+        font-size: 0.84rem;
+        letter-spacing: 1.3px;
         text-transform: uppercase;
         cursor: pointer;
         transition: all 0.25s ease;
@@ -891,68 +879,67 @@
 
     .order-banner-img {
         width: 100%;
-        height: 260px;
+        height: 270px;
         object-fit: contain;
         object-position: center;
         border: 1px solid var(--animus-blue);
         box-shadow: 0 0 18px var(--animus-glow);
         background: rgba(0, 6, 14, 0.85);
         padding: 12px;
-        margin-bottom: 20px;
+        margin-bottom: 22px;
     }
 
     .order-card h2 {
         color: var(--animus-blue);
-        font-size: clamp(1.35rem, 3vw, 2.05rem);
-        margin-bottom: 18px;
+        font-size: 2.1rem;
+        margin-bottom: 20px;
         text-transform: uppercase;
-        letter-spacing: 1.5px;
+        letter-spacing: 2px;
         border-bottom: 1px solid rgba(14, 165, 233, 0.3);
         padding-bottom: 12px;
-        word-break: break-word;
     }
 
     .order-card h3 {
         color: var(--animus-blue);
-        font-size: clamp(1.08rem, 2.2vw, 1.28rem);
-        margin: 22px 0 10px 0;
+        font-size: 1.3rem;
+        margin: 24px 0 10px 0;
         text-transform: uppercase;
         letter-spacing: 1px;
     }
 
     .order-card h4 {
         color: var(--text-main);
-        font-size: 1.05rem;
-        margin: 14px 0 8px 0;
+        font-size: 1.1rem;
+        margin: 16px 0 8px 0;
     }
 
     .order-card p {
         color: var(--text-muted);
-        font-size: 0.98rem;
-        line-height: 1.68;
-        margin-bottom: 14px;
+        font-size: 1.02rem;
+        line-height: 1.7;
+        margin-bottom: 16px;
     }
 
     .order-card ul {
-        margin: 12px 0 16px 22px;
+        margin: 12px 0 18px 26px;
         color: var(--text-muted);
     }
 
     .order-card li {
         margin-bottom: 8px;
-        font-size: 0.96rem;
-        line-height: 1.58;
+        font-size: 1rem;
+        line-height: 1.6;
     }
 
     .location-banner-img {
         width: 100%;
-        height: 290px;
+        height: 310px;
         object-fit: cover;
         object-position: center;
         border: 1px solid var(--animus-blue);
         box-shadow: 0 0 18px var(--animus-glow);
         background: rgba(0, 6, 14, 0.85);
-        margin-bottom: 18px;
+        margin-bottom: 20px;
     }
 
     /* Modal Minijuego de Anomalía del Animus */
@@ -965,7 +952,7 @@
         display: none;
         justify-content: center;
         align-items: center;
-        padding: 14px;
+        padding: 20px;
     }
 
     .anomaly-box {
@@ -974,34 +961,35 @@
         box-shadow: 0 0 40px rgba(245, 158, 11, 0.35);
         width: 100%;
         max-width: 680px;
-        padding: 24px 26px;
+        padding: 28px 34px;
         position: relative;
-        max-height: 90dvh;
+        max-height: 90vh;
         overflow-y: auto;
     }
 
     .anomaly-title {
         color: #facc15;
-        font-size: clamp(1rem, 2.8vw, 1.35rem);
-        letter-spacing: 1.5px;
+        font-size: 1.4rem;
+        letter-spacing: 2px;
         text-transform: uppercase;
+        margin-bottom: 10px;
         border-bottom: 1px solid rgba(250, 204, 21, 0.3);
-        padding-bottom: 8px;
+        padding-bottom: 10px;
     }
 
     .anomaly-nodes {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
-        margin: 20px 0;
+        gap: 12px;
+        margin: 22px 0;
     }
 
     .node-btn {
         background: rgba(245, 158, 11, 0.1);
         border: 1px solid rgba(245, 158, 11, 0.5);
         color: #fef08a;
-        padding: 16px 8px;
-        font-size: 1rem;
+        padding: 18px 10px;
+        font-size: 1.1rem;
         font-weight: bold;
         cursor: pointer;
         transition: all 0.2s;
@@ -1022,174 +1010,11 @@
     .truth-archive {
         background: rgba(0, 0, 0, 0.72);
         border-left: 3px solid #22c55e;
-        padding: 14px;
-        margin-top: 14px;
+        padding: 16px;
+        margin-top: 16px;
         color: #e2e8f0;
-        font-size: 0.92rem;
-        line-height: 1.6;
-    }
-
-    /* ============================================================
-       MEDIA QUERIES: TABLET Y MÓVIL
-       ============================================================ */
-    @media (max-width: 1024px) {
-        #animus-main {
-            grid-template-columns: 280px 1fr;
-        }
-
-        .dossier-body {
-            grid-template-columns: 240px 1fr;
-            gap: 18px;
-        }
-
-        .character-img {
-            min-height: 230px;
-            max-height: 300px;
-        }
-    }
-
-    @media (max-width: 768px) {
-        body, #animus-main {
-            height: auto;
-            min-height: 100dvh;
-            overflow-y: auto;
-            overflow-x: hidden;
-        }
-
-        #animus-main {
-            display: flex;
-            flex-direction: column;
-            padding-bottom: 78px;
-        }
-
-        header {
-            padding: 10px 14px;
-            gap: 8px;
-        }
-
-        .logo-area {
-            font-size: 0.92rem;
-            letter-spacing: 1.5px;
-        }
-
-        .search-box-wrapper {
-            order: 3;
-            flex: 1 1 100%;
-            max-width: 100%;
-        }
-
-        .header-controls {
-            gap: 6px;
-        }
-
-        .hud-pill-btn {
-            padding: 5px 8px;
-            font-size: 0.65rem;
-        }
-
-        .sync-bar {
-            width: 65px;
-        }
-
-        aside {
-            border-right: none;
-            border-bottom: 1px solid rgba(14, 165, 233, 0.25);
-            padding: 12px 14px;
-            max-height: 310px;
-        }
-
-        #memory-items-scroll {
-            max-height: 145px;
-        }
-
-        main {
-            padding: 14px;
-            overflow: visible;
-            flex: 1;
-        }
-
-        .dossier-card, .order-card {
-            padding: 20px 16px;
-            height: auto;
-            overflow: visible;
-        }
-
-        .dossier-card::after {
-            font-size: 0.58rem;
-            right: 10px;
-            top: 6px;
-            letter-spacing: 1px;
-        }
-
-        .dossier-badges {
-            align-items: flex-start;
-        }
-
-        .dossier-game {
-            white-space: normal;
-            font-size: 0.78rem;
-        }
-
-        .dossier-body {
-            grid-template-columns: 1fr;
-            gap: 16px;
-        }
-
-        .character-img {
-            min-height: 210px;
-            max-height: 260px;
-        }
-
-        .dossier-grid {
-            grid-template-columns: 1fr;
-            gap: 10px;
-        }
-
-        .dossier-desc {
-            max-height: none;
-            font-size: 0.92rem;
-        }
-
-        .order-banner-img {
-            height: 190px;
-        }
-
-        .location-banner-img {
-            height: 200px;
-        }
-
-        .animus-dock {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            gap: 12px;
-            justify-content: space-around;
-            padding: 8px 6px;
-        }
-
-        .dock-btn {
-            width: 40px;
-            height: 40px;
-        }
-
-        .dock-label {
-            font-size: 0.58rem;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .splash-content {
-            padding: 26px 20px;
-        }
-
-        .anomaly-nodes {
-            grid-template-columns: repeat(2, 1fr);
-        }
-
-        .bio-val {
-            font-size: 0.76rem;
-        }
+        font-size: 0.94rem;
+        line-height: 1.65;
     }
 
     @keyframes fadeIn {
@@ -1314,12 +1139,12 @@
     <!-- Modal Detector de Anomalías del Animus -->
     <div id="anomaly-modal">
         <div class="anomaly-box">
-            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div class="anomaly-title">[!] ANOMALÍA EN EL FLUJO DE MEMORIA</div>
                 <button class="hud-pill-btn" onclick="cerrarModalAnomalia()">CERRAR [X]</button>
             </div>
             <p style="color: var(--text-muted); font-size: 0.92rem; line-height: 1.5; margin-top: 8px;" id="anomaly-instructions">
-                Se ha detectado un paquete de datos corrupto de la Primera Civilización incrustado en la simulación. Pulsa los <strong>4 nodos de frecuencia Isu en orden ascendente (1 → 4)</strong> para estabilizar el bloque y recuperar el archivo encriptado de <em>La Verdad</em>.
+                Se ha detectado una paquete de datos corrupto de la Primera Civilización incrustado en la simulación. Pulsa los <strong>4 nodos de frecuencia Isu en orden ascendente (1 → 4)</strong> para estabilizar el bloque y recuperar el archivo encriptado de <em>La Verdad</em>.
             </p>
             <div class="anomaly-nodes" id="anomaly-nodes-grid"></div>
             <div id="anomaly-feedback" style="font-size:0.85rem; color:#facc15; letter-spacing:1px;"></div>
@@ -2037,7 +1862,7 @@
         let estado = {
             leidos: ['kassandra'],
             anomaliaResuelta: false,
-            flujoADN: 'auto'
+            flujoADN: 'auto' // 'auto' | 'active' | 'isu'
         };
 
         try {
@@ -2204,19 +2029,12 @@
             setTimeout(() => {
                 splash.style.display = 'none';
                 const main = document.getElementById('animus-main');
-                main.style.display = window.innerWidth <= 768 ? 'flex' : 'grid';
+                main.style.display = 'grid';
                 setTimeout(() => main.style.opacity = '1', 50);
                 actualizarBiometria();
                 mostrarSeccion('database');
             }, 750);
         }
-
-        window.addEventListener('resize', () => {
-            const main = document.getElementById('animus-main');
-            if (main && main.style.display !== 'none') {
-                main.style.display = window.innerWidth <= 768 ? 'flex' : 'grid';
-            }
-        });
 
         /* ============================================================
            NAVEGACIÓN, SUBFILTROS Y BUSCADOR GLOBAL EN TIEMPO REAL
@@ -2236,6 +2054,7 @@
             AnimusAudio.playClick(1050, 0.03);
 
             if (seccionActual === 'factions') {
+                // Si busca desde facciones, cambia a Personas si hay coincidencias o filtra facciones
                 const matchFac = Object.entries(faccionesData).find(([, f]) =>
                     (f.titulo + ' ' + f.html).toLowerCase().includes(textoBusqueda)
                 );
@@ -2257,7 +2076,7 @@
             renderizarSidebar();
         });
 
-        function mostrarSeccion(seccion) {
+        function mostrarSeccion(seccion, mantenerBusqueda = false) {
             seccionActual = seccion;
             subfiltroActual = 'todos';
             AnimusAudio.playClick(840, 0.06);
@@ -2345,7 +2164,7 @@
             }
 
             if (lista.length === 0) {
-                container.innerHTML = `<div style="padding:14px; color:var(--text-muted); font-size:0.8rem; border:1px dashed rgba(255,255,255,0.2);">SIN COINCIDENCIAS EN EL FLUJO GENÉTICO PARA "${textoBusqueda.toUpperCase()}"</div>`;
+                container.innerHTML = `<div style="padding:16px; color:var(--text-muted); font-size:0.82rem; border:1px dashed rgba(255,255,255,0.2);">SIN COINCIDENCIAS EN EL FLUJO GENÉTICO PARA "${textoBusqueda.toUpperCase()}"</div>`;
                 return;
             }
 
