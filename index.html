@@ -1036,6 +1036,7 @@
         <div class="splash-content">
             <img src="animus1.jpg" alt="Logotipo Animus" class="splash-logo">
             <div class="splash-title">ANIMUS HR-8.5</div>
+            <div class="splash-subtitle">Arquitectura Unificada // 1.28 · 2.0 · HELIX · HR-8.5</div>
             <div class="loading-container">
                 <div class="loading-text" id="loading-text">BUSCANDO DATOS RELEVANTES DE MEMORIA... 0%</div>
                 <div class="dna-loader" id="dna-loader" aria-label="Secuenciando cadena de ADN"></div>
@@ -1857,18 +1858,20 @@
         /* ============================================================
            ESTADO GLOBAL Y PROGRESO PERSISTENTE (localStorage)
            ============================================================ */
-        const STORAGE_KEY = 'animus_hr85_codex_state_v3';
+        const STORAGE_KEY = 'animus_hr85_codex_state_v5_fresh';
         let estado = {
             leidos: [],
             anomaliaResuelta: false,
             flujoADN: 'auto' // 'auto' | 'active' | 'isu'
         };
 
+        // Al abrir como nueva, limpiamos restos de claves antiguas en localStorage
         try {
-            const guardado = JSON.parse(localStorage.getItem(STORAGE_KEY));
-            if (guardado && Array.isArray(guardado.leidos)) {
-                estado = { ...estado, ...guardado };
-            }
+            Object.keys(localStorage).forEach(k => {
+                if (k.startsWith('animus_hr85_codex_state')) {
+                    localStorage.removeItem(k);
+                }
+            });
         } catch (e) {}
 
         function obtenerIdsValidos() {
@@ -1896,17 +1899,14 @@
 
         function actualizarBarraSincronizacion() {
             const idsValidos = obtenerIdsValidos();
-            const totalFichas = idsValidos.size;
             const leidosUnicos = estado.leidos.filter(id => idsValidos.has(id));
-            const rawPct = totalFichas > 0
-                ? Math.min(100, +((leidosUnicos.length / totalFichas) * 100).toFixed(1))
-                : 0;
-            const porcentajeTexto = rawPct === 0 ? '0%' : `${rawPct}%`;
+            const pctNum = Math.min(100, leidosUnicos.length * 1);
+            const porcentaje = `${pctNum}%`;
 
             const span = document.getElementById('sync-percent');
             const fill = document.getElementById('sync-bar-fill');
-            if (span) span.innerText = porcentajeTexto;
-            if (fill) fill.style.width = `${rawPct}%`;
+            if (span) span.innerText = `${porcentaje}%`;
+            if (fill) fill.style.width = `${porcentaje}%`;
 
             const btnAnom = document.getElementById('btn-anomaly');
             if (btnAnom && estado.anomaliaResuelta) {
@@ -2196,32 +2196,30 @@
                     <div class="memory-era">${sub}</div>
                 `;
 
-                const mostrarVistaPrevia = () => {
+                const mostrar = (marcarLeido) => {
                     document.querySelectorAll('#memory-items-scroll .memory-item').forEach(el => el.classList.remove('active'));
                     div.classList.add('active');
                     itemSeleccionado = item;
+                    if (marcarLeido) {
+                        marcarComoLeido(item.id);
+                        if (!div.querySelector('.read-dot')) {
+                            div.querySelector('.memory-item-top').insertAdjacentHTML('beforeend', '<span class="read-dot"></span>');
+                        }
+                    }
                     if (seccionActual === 'database') cargarDossier(item);
                     else if (seccionActual === 'locations') cargarLocalizacion(item);
                     else cargarArticuloTecnico(item);
                 };
 
-                const pulsarFicha = () => {
-                    mostrarVistaPrevia();
-                    marcarComoLeido(item.id);
-                    if (!div.querySelector('.read-dot')) {
-                        div.querySelector('.memory-item-top').insertAdjacentHTML('beforeend', '<span class="read-dot"></span>');
-                    }
-                };
-
                 div.addEventListener('click', () => {
                     AnimusAudio.playClick(860, 0.05);
-                    pulsarFicha();
+                    mostrar(true);
                 });
 
                 container.appendChild(div);
                 if (activo) {
                     itemSeleccionado = item;
-                    if (cargarPrimero) mostrarVistaPrevia();
+                    if (cargarPrimero) mostrar(false);
                 }
             });
         }
@@ -2249,7 +2247,6 @@
         }
 
         function cargarDossier(mem) {
-            marcarComoLeido(mem.id);
             const viewport = document.getElementById('viewport');
             const esFlujoIsu = estado.flujoADN === 'isu';
             const nombreMostrado = (esFlujoIsu && mem.nombreAlt) ? mem.nombreAlt : mem.nombre;
@@ -2305,7 +2302,6 @@
         }
 
         function cargarLocalizacion(loc) {
-            marcarComoLeido(loc.id);
             const viewport = document.getElementById('viewport');
             viewport.innerHTML = `
                 <div class="order-card">
@@ -2338,29 +2334,24 @@
             `;
         }
 
-        function seleccionarFaccion(faccion) {
-            AnimusAudio.playClick();
-            marcarComoLeido(`fac-${faccion}`);
-            cargarFacciones(faccion);
-        }
-
         function cargarFacciones(faccion = 'assassins') {
             faccionActiva = faccion;
+            marcarComoLeido(`fac-${faccion}`);
             const data = faccionesData[faccion];
             const viewport = document.getElementById('viewport');
 
             const tabsHtml = `
                 <div class="faction-tabs">
-                    <button class="faction-tab-btn ${faccion === 'assassins' ? 'active' : ''}" onclick="seleccionarFaccion('assassins')">
+                    <button class="faction-tab-btn ${faccion === 'assassins' ? 'active' : ''}" onclick="AnimusAudio.playClick(); cargarFacciones('assassins')">
                         Hermandad de los Asesinos
                     </button>
-                    <button class="faction-tab-btn ${faccion === 'templars' ? 'active' : ''}" onclick="seleccionarFaccion('templars')">
+                    <button class="faction-tab-btn ${faccion === 'templars' ? 'active' : ''}" onclick="AnimusAudio.playClick(); cargarFacciones('templars')">
                         Orden de los Templarios
                     </button>
-                    <button class="faction-tab-btn ${faccion === 'ancients' ? 'active' : ''}" onclick="seleccionarFaccion('ancients')">
+                    <button class="faction-tab-btn ${faccion === 'ancients' ? 'active' : ''}" onclick="AnimusAudio.playClick(); cargarFacciones('ancients')">
                         Orden de los Antiguos / Kosmos
                     </button>
-                    <button class="faction-tab-btn ${faccion === 'isu' ? 'active' : ''}" onclick="seleccionarFaccion('isu')">
+                    <button class="faction-tab-btn ${faccion === 'isu' ? 'active' : ''}" onclick="AnimusAudio.playClick(); cargarFacciones('isu')">
                         Los Isu (Primera Civilización)
                     </button>
                 </div>
@@ -2378,7 +2369,6 @@
         }
 
         function cargarArticuloTecnico(art) {
-            marcarComoLeido(art.id);
             const viewport = document.getElementById('viewport');
             viewport.innerHTML = `
                 <div class="order-card">
